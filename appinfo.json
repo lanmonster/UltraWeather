@@ -14,78 +14,73 @@
   "resources":
   {
     "media":
-      [
-      	{
-          "type": "png",
-          "name": "IMAGE_MENU_ICON",
-          "file": "images/menu_icon.png",
-          "menuIcon": true
-        },
-        {
-          "type": "png",
-          "name": "IMAGE_BLUETOOTH_CONNECTED",
-          "file": "images/connected.png"
-        },
-	{
-          "type": "png",
-          "name": "IMAGE_BLUETOOTH_DISCONNECTED",
-          "file": "images/disconnected.png"
-        },
-	{
-	  "type": "png",
-          "name": "IMAGE_BATT0",
-          "file": "images/batt.png"
-	},
-	{
-	  "type": "png",
-          "name": "IMAGE_BATT1",
-          "file": "images/batt_1.png"
-	},
-	{
-	  "type": "png",
-          "name": "IMAGE_BATT2",
-          "file": "images/batt_2.png"
-	},
-	{
-	  "type": "png",
-          "name": "IMAGE_BATT3",
-          "file": "images/batt_3.png"
-	},
-	{
-	  "type": "png",
-          "name": "IMAGE_SUN",
-          "file": "images/sunday.png"
-	},
-	{
-	  "type": "png",
-          "name": "IMAGE_MON",
-          "file": "images/monday.png"
-	},
-	{
-	  "type": "png",
-          "name": "IMAGE_TUE",
-          "file": "images/tuesday.png"
-	},
-	{
-	  "type": "png",
-          "name": "IMAGE_WED",
-          "file": "images/wednesday.png"
-	},
-	{
-	  "type": "png",
-          "name": "IMAGE_THU",
-          "file": "images/thursday.png"
-	},
-	{
-	  "type": "png",
-          "name": "IMAGE_FRI",
-          "file": "images/friday.png"
-	},
-	{
-	  "type": "png",
-          "name": "IMAGE_SAT",
-          "file": "images/saturday.png"
-	}
-      ]
+    [
+      {
+        "type": "png",
+        "name": "MENU_ICON",
+        "file": "images/menu_icon.png",
+        "menuIcon": true
+      },
+      {
+        "type": "png",
+        "name": "BLUETOOTH_CONNECTED",
+        "file": "images/connected.png"
+      },
+      {
+        "type": "png",
+        "name": "BATT0",
+        "file": "images/batt.png"
+      },
+      {
+        "type": "png",
+        "name": "BATT1",
+        "file": "images/batt_1.png"
+      },
+      {
+        "type": "png",
+        "name": "BATT2",
+        "file": "images/batt_2.png"
+      },
+      {
+        "type": "png",
+        "name": "BATT3",
+        "file": "images/batt_3.png"
+      },
+      {
+        "type": "png",
+        "name": "SUN",
+        "file": "images/sunday.png"
+      },
+      {
+        "type": "png",
+        "name": "MON",
+        "file": "images/monday.png"
+      },
+      {
+        "type": "png",
+        "name": "TUE",
+        "file": "images/tuesday.png"
+      },
+      {
+        "type": "png",
+        "name": "WED",
+        "file": "images/wednesday.png"
+      },
+      {
+        "type": "png",
+        "name": "THU",
+        "file": "images/thursday.png"
+      },
+      {
+        "type": "png",
+        "name": "FRI",
+        "file": "images/friday.png"
+      },
+      {
+        "type": "png",
+        "name": "SAT",
+        "file": "images/saturday.png"
+      }
+    ]
   }
 }
