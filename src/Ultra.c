@@ -43,12 +43,14 @@ const int WEEKDAY_RESOURCE_IDS[] = {
 
 static void handle_day_of_week(struct tm *current_time) {
     int weekday = current_time->tm_wday;
-    gbitmap_destroy(dayOfWeek_image);
+    if (dayOfWeek_image)
+        gbitmap_destroy(dayOfWeek_image);
     dayOfWeek_image = gbitmap_create_with_resource(WEEKDAY_RESOURCE_IDS[weekday]);
 }
 
 static void handle_bt() {
-    gbitmap_destroy(bluetooth_image);
+    if (bluetooth_image)
+        gbitmap_destroy(bluetooth_image);
     if (bluetooth_connection_service_peek())       
         bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_BLUETOOTH_CONNECTED);
 }
@@ -66,7 +68,8 @@ static void handle_battery(BatteryChargeState charge_state) {
     text_layer_set_text(charging_layer, charging_text);
     text_layer_set_text(battery_layer, battery_text);
 
-    gbitmap_destroy(battery_image);
+    if (battery_image)
+        gbitmap_destroy(battery_image);
     if (charge_state.charge_percent > 75)
         battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[0]);
     else if (charge_state.charge_percent <= 75 && charge_state.charge_percent > 50)
