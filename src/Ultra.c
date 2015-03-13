@@ -1,6 +1,6 @@
 /******************************************
  TODO:
-    -weather
+    -weather images
     -batt4 image with no bars in it
  ******************************************/
 #include <pebble.h>
