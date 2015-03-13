@@ -139,7 +139,7 @@ static void window_load(Window *window) {
     text_layer_set_background_color(temperature_layer, GColorClear);
     text_layer_set_text_color(temperature_layer, GColorWhite);
     text_layer_set_font(temperature_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-    text_layer_set_text(temperature_layer, "--- F");
+    text_layer_set_text(temperature_layer, "-- °F");
     
     //Load weather image module
     
@@ -194,7 +194,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         // Which key was received?
         switch(t->key) {
             case KEY_TEMPERATURE:
-                snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)t->value->int32);
+                snprintf(temperature_buffer, sizeof(temperature_buffer), "%d °F", (int)t->value->int32);
                 text_layer_set_text(temperature_layer, temperature_buffer);
                 break;
             case KEY_CONDITIONS:
