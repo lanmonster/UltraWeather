@@ -1,7 +1,6 @@
 /******************************************
  TODO:
     -weather images
-    -batt4 image with no bars in it
  ******************************************/
 #include <pebble.h>
 #define KEY_TEMPERATURE 0
@@ -11,6 +10,9 @@ static Window *window;
 
 static GBitmap *battery_image;
 static BitmapLayer *battery_image_layer;
+
+static GBitmap *bluetooth_image;
+static BitmapLayer *bluetooth_image_layer;
 
 static TextLayer *condition_layer;
 static TextLayer *temperature_layer;
@@ -28,7 +30,8 @@ const int BATTERY_LEVEL_RESOURCE_IDS[] = {
     RESOURCE_ID_BATT0,
     RESOURCE_ID_BATT1,
     RESOURCE_ID_BATT2,
-    RESOURCE_ID_BATT3
+    RESOURCE_ID_BATT3,
+    RESOURCE_ID_BATT4
 };
 
 const int WEEKDAY_RESOURCE_IDS[] = {
@@ -69,21 +72,37 @@ static void handle_battery() {
     
     if (battery_image)
         gbitmap_destroy(battery_image);
+    
     if (charge_state.charge_percent > 75)
         battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[0]);
     else if (charge_state.charge_percent <= 75 && charge_state.charge_percent > 50)
         battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[1]);
     else if (charge_state.charge_percent <= 50 && charge_state.charge_percent > 25)
         battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[2]);
-    else if (charge_state.charge_percent <= 25 && charge_state.charge_percent > 0)
+    else if (charge_state.charge_percent <= 25 && charge_state.charge_percent > 10)
         battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[3]);
-//     else
-//         battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[4]);
+    else
+        battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[4]);
+    
+    bitmap_layer_set_bitmap(battery_image_layer, battery_image);
+}
+
+void handle_bt(bool bt) {
+    if (bluetooth_image)
+        gbitmap_destroy(bluetooth_image);
+    
+    if (bt)
+        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_BLUETOOTH_CONNECTED);
+    else
+        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_BLUETOOTH_DISCONNECTED);
+    
+    bitmap_layer_set_bitmap(bluetooth_image_layer, bluetooth_image);
 }
 
 void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
     handle_time_and_date();
     handle_battery();
+    handle_bt(bluetooth_connection_service_peek());
     
     // Get weather update every 30 minutes
     if(tick_time->tm_min % 30 == 0) {
@@ -131,7 +150,7 @@ static void window_load(Window *window) {
     text_layer_set_background_color(condition_layer, GColorClear);
     text_layer_set_text_color(condition_layer, GColorWhite);
     text_layer_set_text_alignment(condition_layer, GTextAlignmentCenter);
-    text_layer_set_text(condition_layer, "Loading...");
+    text_layer_set_text(condition_layer, "Loading");
     
     //Load temperature module
     temperature_layer = text_layer_create(GRect(0, 20, 144, 168));
@@ -139,9 +158,19 @@ static void window_load(Window *window) {
     text_layer_set_background_color(temperature_layer, GColorClear);
     text_layer_set_text_color(temperature_layer, GColorWhite);
     text_layer_set_font(temperature_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-    text_layer_set_text(temperature_layer, "-- °F");
+    text_layer_set_text(temperature_layer, "--- °F");
     
     //Load weather image module
+    
+    //Load bluetooth module
+    bool bt = bluetooth_connection_service_peek();
+    if (bt)
+        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_BLUETOOTH_CONNECTED);
+    else
+        bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_BLUETOOTH_DISCONNECTED);
+    bluetooth_image_layer = bitmap_layer_create(GRect(5, 10, 144-5, 168-10));
+    bitmap_layer_set_alignment(bluetooth_image_layer, GAlignTopLeft);
+    bitmap_layer_set_bitmap(bluetooth_image_layer, bluetooth_image);
     
     //Add all layers to window
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
@@ -150,10 +179,12 @@ static void window_load(Window *window) {
     layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(battery_image_layer));
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(condition_layer));
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(temperature_layer));
+    layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(bluetooth_image_layer));
     
-    //Update time, date, and battery stats
+    //Update time, date, bluetooth, and battery stats
     handle_time_and_date();
     handle_battery();
+    handle_bt(bluetooth_connection_service_peek());
 }
 
 static void window_unload(Window *window) {
@@ -178,7 +209,10 @@ static void window_unload(Window *window) {
     text_layer_destroy(temperature_layer);
     
     //Destroy weather image module
-
+    
+    //Destroy bluetooth module
+    gbitmap_destroy(bluetooth_image);
+    bitmap_layer_destroy(bluetooth_image_layer);
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
@@ -232,8 +266,9 @@ static void init(void) {
     window_set_background_color(window, GColorBlack);
     window_stack_push(window, true);
 
-    battery_state_service_subscribe(&handle_battery);
+    battery_state_service_subscribe(handle_battery);
     tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
+    bluetooth_connection_service_subscribe(handle_bt);
     
     app_message_register_inbox_received(inbox_received_callback);
     app_message_register_inbox_dropped(inbox_dropped_callback);
@@ -246,7 +281,8 @@ static void init(void) {
 static void deinit(void) {
     battery_state_service_unsubscribe();
     tick_timer_service_unsubscribe();
-
+    bluetooth_connection_service_unsubscribe();
+    
     window_destroy(window);
 }
 
