@@ -31,6 +31,11 @@
       },
       {
         "type": "png",
+        "name": "BLUETOOTH_DISCONNECTED",
+        "file": "images/disconnected.png"
+      },
+      {
+        "type": "png",
         "name": "BATT0",
         "file": "images/batt.png"
       },
@@ -48,6 +53,11 @@
         "type": "png",
         "name": "BATT3",
         "file": "images/batt_3.png"
+      },
+      {
+        "type": "png",
+        "name": "BATT4",
+        "file": "images/batt_4.png"
       },
       {
         "type": "png",
