@@ -1,4 +1,4 @@
-Ultra
+Ultra Weather
 =====
 
 pebble watchface
