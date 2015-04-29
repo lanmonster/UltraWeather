@@ -1,11 +1,15 @@
-/******************************************
- TODO:
-    -weather images
- ******************************************/
 #include <pebble.h>
-#define KEY_TEMPERATURE 0
-#define KEY_CONDITIONS 1
+#include <math.h>
+#define KEY_SCALE 0
+#define KEY_TEMPERATURE 1
+#define KEY_CONDITIONS 2
 
+/**********************
+ *    TODO:
+ *
+ *    -Weather Images
+ **********************/ 
+    
 static Window *window;
 
 static GBitmap *battery_image;
@@ -25,6 +29,9 @@ static GBitmap *dayOfWeek_image;
 static BitmapLayer *dayOfWeek_layer;
 
 GContext *time_ctx;
+
+static bool c;
+static bool f = true;
 
 const int BATTERY_LEVEL_RESOURCE_IDS[] = {
     RESOURCE_ID_BATT0,
@@ -146,7 +153,7 @@ static void window_load(Window *window) {
     bitmap_layer_set_bitmap(battery_image_layer, battery_image);
     
     //Load condition module
-    condition_layer = text_layer_create(GRect(5, 7, 144, 168));
+    condition_layer = text_layer_create(GRect(0, 7, 144, 168));
     text_layer_set_background_color(condition_layer, GColorClear);
     text_layer_set_text_color(condition_layer, GColorWhite);
     text_layer_set_text_alignment(condition_layer, GTextAlignmentCenter);
@@ -158,13 +165,12 @@ static void window_load(Window *window) {
     text_layer_set_background_color(temperature_layer, GColorClear);
     text_layer_set_text_color(temperature_layer, GColorWhite);
     text_layer_set_font(temperature_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-    text_layer_set_text(temperature_layer, "--- °F");
+    text_layer_set_text(temperature_layer, "---");
     
     //Load weather image module
     
     //Load bluetooth module
-    bool bt = bluetooth_connection_service_peek();
-    if (bt)
+    if (bluetooth_connection_service_peek())
         bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_BLUETOOTH_CONNECTED);
     else
         bluetooth_image = gbitmap_create_with_resource(RESOURCE_ID_BLUETOOTH_DISCONNECTED);
@@ -180,7 +186,7 @@ static void window_load(Window *window) {
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(condition_layer));
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(temperature_layer));
     layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(bluetooth_image_layer));
-    
+        
     //Update time, date, bluetooth, and battery stats
     handle_time_and_date();
     handle_battery();
@@ -218,17 +224,41 @@ static void window_unload(Window *window) {
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
     // Store incoming information
     static char temperature_buffer[8];
-    static char conditions_buffer[32];
-
+    static char conditions_buffer[16];
+    double temp;
     // Read first item
     Tuple *t = dict_read_first(iterator);
     
     // For all items
     while(t != NULL) {
         // Which key was received?
-        switch(t->key) {
+        switch(t->key) {    
+           case KEY_SCALE:
+                if (strcmp(t->value->cstring, "c") == 0) {
+                    c = true;
+                    f = false;
+                } else if (strcmp(t->value->cstring, "f") == 0) {
+                    c = false;
+                    f = false;
+                } else {
+                    c = false;
+                    f = false;
+                }
+                break;
             case KEY_TEMPERATURE:
-                snprintf(temperature_buffer, sizeof(temperature_buffer), "%d °F", (int)t->value->int32);
+                temp = (int)t->value->int32;
+                if (f)
+                    snprintf(temperature_buffer, sizeof(temperature_buffer), "%d °F", (int)temp);
+                else if (c) {
+                    temp -= 32;
+                    temp *= (double)(5.0/9.0);
+                    snprintf(temperature_buffer, sizeof(temperature_buffer), "%d °C", (int)round(temp));
+                } else {
+                    temp += 459.67;
+                    temp *= (double)(5.0/9.0);
+                     snprintf(temperature_buffer, sizeof(temperature_buffer), "%d K", (int)round(temp));
+                }
+
                 text_layer_set_text(temperature_layer, temperature_buffer);
                 break;
             case KEY_CONDITIONS:
@@ -265,7 +295,7 @@ static void init(void) {
     });
     window_set_background_color(window, GColorBlack);
     window_stack_push(window, true);
-
+    
     battery_state_service_subscribe(handle_battery);
     tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
     bluetooth_connection_service_subscribe(handle_bt);
