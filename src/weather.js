@@ -82,7 +82,7 @@ Pebble.addEventListener("webviewclosed",
 
     //Send to Pebble, persist there
     Pebble.sendAppMessage(
-      {"KEY_SCALE": configuration.invert},
+      {"KEY_SCALE": configuration.scale},
       function(e) {
         console.log("Sending settings data...");
       },
