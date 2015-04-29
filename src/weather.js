@@ -17,7 +17,7 @@ function locationSuccess(pos) {
     function(responseText) {
       // responseText contains a JSON object with weather info
       var json = JSON.parse(responseText);
-
+      
       // Temperature in Kelvin requires adjustment
       var temperature = Math.round(((json.main.temp - 273.15) * 1.8) + 32);
       console.log("Temperature is " + temperature);
@@ -64,6 +64,33 @@ Pebble.addEventListener('ready',
 
     // Get the initial weather
     getWeather();
+  }
+);
+
+Pebble.addEventListener("showConfiguration",
+  function(e) {
+    //Load the remote config page
+      Pebble.openURL("http://ultraweatherconfig.pancakeapps.com/");
+  }
+);
+
+Pebble.addEventListener("webviewclosed",
+  function(e) {
+    //Get JSON dictionary
+    var configuration = JSON.parse(decodeURIComponent(e.response));
+    console.log("Configuration window returned: " + JSON.stringify(configuration));
+
+    //Send to Pebble, persist there
+    Pebble.sendAppMessage(
+      {"KEY_SCALE": configuration.invert},
+      function(e) {
+        console.log("Sending settings data...");
+      },
+        
+      function(e) {
+        console.log("Settings feedback failed!");
+      }
+    );
   }
 );
 
