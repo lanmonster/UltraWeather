@@ -106,23 +106,26 @@ void handle_bt(bool bt) {
     bitmap_layer_set_bitmap(bluetooth_image_layer, bluetooth_image);
 }
 
+void handle_weather() {
+    // Begin dictionary
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+
+    // Add a key-value pair
+    dict_write_uint8(iter, 0, 0);
+
+    // Send the message!
+    app_message_outbox_send();
+}
+
 void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
     handle_time_and_date();
     handle_battery();
     handle_bt(bluetooth_connection_service_peek());
     
     // Get weather update every 30 minutes
-    if(tick_time->tm_min % 30 == 0) {
-        // Begin dictionary
-        DictionaryIterator *iter;
-        app_message_outbox_begin(&iter);
-
-        // Add a key-value pair
-        dict_write_uint8(iter, 0, 0);
-
-        // Send the message!
-        app_message_outbox_send();
-    }
+    if(tick_time->tm_min % 30 == 0)
+        handle_weather();
 }
 
 static void window_load(Window *window) {
@@ -239,11 +242,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                     f = false;
                 } else if (strcmp(t->value->cstring, "f") == 0) {
                     c = false;
-                    f = false;
+                    f = true;
                 } else {
                     c = false;
                     f = false;
                 }
+                handle_weather();
                 break;
             case KEY_TEMPERATURE:
                 temp = (int)t->value->int32;

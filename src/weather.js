@@ -70,7 +70,7 @@ Pebble.addEventListener('ready',
 Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
-      Pebble.openURL("http://ultraweatherconfig.pancakeapps.com/");
+      Pebble.openURL("http://lanmonster.github.io");
   }
 );
 
