@@ -11,7 +11,7 @@
   },
   "appKeys": {
       "KEY_SCALE": 0,
-      "KEY_CONDITIONS":  1,
+      "KEY_TEMPERATURE":  1,
       "KEY_CONDITIONS": 2
   },
   "capabilities": [
