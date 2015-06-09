@@ -3,45 +3,26 @@
 #define KEY_SCALE 0
 #define KEY_TEMPERATURE 1
 #define KEY_CONDITIONS 2
+#define KEY_F 3
+#define KEY_C 4
+#define KEY_K 5
 
-/**********************
+/**************************
  *    TODO:
  *
  *    -Weather Images
- **********************/ 
+ *    -charging indicator
+ **************************/ 
     
 static Window *window;
 
-static GBitmap *battery_image;
-static BitmapLayer *battery_image_layer;
+static GBitmap *battery_image, *bluetooth_image, *dayOfWeek_image;
+static BitmapLayer *battery_image_layer, *bluetooth_image_layer, *dayOfWeek_layer;
+static TextLayer *condition_layer, *temperature_layer, *time_layer, *date_layer;
 
-static GBitmap *bluetooth_image;
-static BitmapLayer *bluetooth_image_layer;
+static bool c, k , f = true;
 
-static TextLayer *condition_layer;
-static TextLayer *temperature_layer;
-
-static TextLayer *time_layer;
-
-static TextLayer *date_layer;
-
-static GBitmap *dayOfWeek_image;
-static BitmapLayer *dayOfWeek_layer;
-
-GContext *time_ctx;
-
-static bool c;
-static bool f = true;
-
-const int BATTERY_LEVEL_RESOURCE_IDS[] = {
-    RESOURCE_ID_BATT0,
-    RESOURCE_ID_BATT1,
-    RESOURCE_ID_BATT2,
-    RESOURCE_ID_BATT3,
-    RESOURCE_ID_BATT4
-};
-
-const int WEEKDAY_RESOURCE_IDS[] = {
+static const int WEEKDAYS[] = {
     RESOURCE_ID_SUN,
     RESOURCE_ID_MON,
     RESOURCE_ID_TUE,
@@ -57,12 +38,12 @@ static void handle_time_and_date() {
     char *time_format = "%R";
     static char time_text[6];
     static char date_text[17];
-    int weekday = current_time->tm_wday;
     
     if (dayOfWeek_image)
         gbitmap_destroy(dayOfWeek_image);
     
-    dayOfWeek_image = gbitmap_create_with_resource(WEEKDAY_RESOURCE_IDS[weekday]);
+    dayOfWeek_image = gbitmap_create_with_resource(WEEKDAYS[current_time->tm_wday]);
+    bitmap_layer_set_bitmap(dayOfWeek_layer, dayOfWeek_image);
 
     if (!clock_is_24h_style())
         time_format = "%I:%M";
@@ -81,15 +62,15 @@ static void handle_battery() {
         gbitmap_destroy(battery_image);
     
     if (charge_state.charge_percent > 75)
-        battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[0]);
+        battery_image = gbitmap_create_with_resource(RESOURCE_ID_BATT0);
     else if (charge_state.charge_percent <= 75 && charge_state.charge_percent > 50)
-        battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[1]);
+        battery_image = gbitmap_create_with_resource(RESOURCE_ID_BATT1);
     else if (charge_state.charge_percent <= 50 && charge_state.charge_percent > 25)
-        battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[2]);
-    else if (charge_state.charge_percent <= 25 && charge_state.charge_percent > 10)
-        battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[3]);
+        battery_image = gbitmap_create_with_resource(RESOURCE_ID_BATT2);
+    else if (charge_state.charge_percent <= 25 && charge_state.charge_percent > 0)
+        battery_image = gbitmap_create_with_resource(RESOURCE_ID_BATT3);
     else
-        battery_image = gbitmap_create_with_resource(BATTERY_LEVEL_RESOURCE_IDS[4]);
+        battery_image = gbitmap_create_with_resource(RESOURCE_ID_BATT4);
     
     bitmap_layer_set_bitmap(battery_image_layer, battery_image);
 }
@@ -128,7 +109,24 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
         handle_weather();
 }
 
+void write_settings_to_memory() {
+    persist_write_bool(KEY_F, f);
+    persist_write_bool(KEY_C, c);
+    persist_write_bool(KEY_K, k);
+}
+
+void read_settings_from_memory() {
+    if (persist_exists(KEY_F))
+        f = persist_read_bool(KEY_F);
+    if (persist_exists(KEY_C))
+        c = persist_read_bool(KEY_C);
+    if (persist_exists(KEY_K))
+        k = persist_read_bool(KEY_K);
+}
+
 static void window_load(Window *window) {
+    read_settings_from_memory();
+    
     //Load time module
     time_layer = text_layer_create(GRect(0, 50, 144, 168));
     text_layer_set_text_color(time_layer, GColorWhite);
@@ -237,16 +235,17 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         // Which key was received?
         switch(t->key) {    
            case KEY_SCALE:
-                if (strcmp(t->value->cstring, "c") == 0) {
-                    c = true;
-                    f = false;
-                } else if (strcmp(t->value->cstring, "f") == 0) {
-                    c = false;
+                if (strcmp(t->value->cstring, "f") == 0) {
                     f = true;
+                    c = k = false;
+                } else if (strcmp(t->value->cstring, "c") == 0) {
+                    c = true;
+                    f = k = false;
                 } else {
-                    c = false;
-                    f = false;
+                    k = true;
+                    f = c = false;
                 }
+                write_settings_to_memory();
                 handle_weather();
                 break;
             case KEY_TEMPERATURE:
@@ -257,12 +256,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                     temp -= 32;
                     temp *= (double)(5.0/9.0);
                     snprintf(temperature_buffer, sizeof(temperature_buffer), "%d °C", (int)round(temp));
-                } else {
+                } else if (k) {
                     temp += 459.67;
                     temp *= (double)(5.0/9.0);
                      snprintf(temperature_buffer, sizeof(temperature_buffer), "%d K", (int)round(temp));
                 }
-
                 text_layer_set_text(temperature_layer, temperature_buffer);
                 break;
             case KEY_CONDITIONS:

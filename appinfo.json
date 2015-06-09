@@ -1,6 +1,9 @@
 {
     "appKeys": {
+        "KEY_C": 4,
         "KEY_CONDITIONS": 2,
+        "KEY_F": 3,
+        "KEY_K": 5,
         "KEY_SCALE": 0,
         "KEY_TEMPERATURE": 1
     },
@@ -91,11 +94,14 @@
             }
         ]
     },
-    "sdkVersion": "2",
+    "sdkVersion": "3",
     "shortName": "Ultra Weather",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
     "uuid": "691023d6-fb20-4df7-aa83-e3304b32342a",
-    "versionCode": 1,
-    "versionLabel": "2.0",
+    "versionLabel": "2.1",
     "watchapp": {
         "watchface": true
     }
